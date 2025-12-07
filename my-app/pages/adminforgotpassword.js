@@ -1,72 +1,54 @@
-// pages/adminlogin.js
-import { useState } from "react";
-import { useRouter } from "next/router";
+// pages/adminforgotpassword.js
+import { useState, useEffect } from "react";
 
-export default function AdminLoginPage() {
-  const router = useRouter();
+export default function AdminForgotPassword() {
   const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
   const [message, setMessage] = useState("");
-  const [loading, setLoading] = useState(false);
+  const [showForm, setShowForm] = useState(false);
+  const [fadeIn, setFadeIn] = useState(false);
+
+  // fade-in animation for form
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setShowForm(true);
+      setFadeIn(true);
+    }, 500);
+    return () => clearTimeout(timer);
+  }, []);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!email || !password) {
-      setMessage("Please enter both email and password.");
-      return;
-    }
-
-    setLoading(true);
     setMessage("");
 
     try {
-      const res = await fetch("http://localhost/Backend/cc105backend/admin_login.php", {
+      const res = await fetch("http://localhost/Backend/cc105backend/forgot_password.php", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password }),
+        body: JSON.stringify({ email }),
       });
 
       const data = await res.json();
-
-      if (data.success) {
-        // Save admin info to localStorage
-        localStorage.setItem(
-          "currentUser",
-          JSON.stringify({
-            email: email,
-            is_admin: 1, // mark as admin
-          })
-        );
-
-        setMessage("Login successful! Redirecting to admin dashboard...");
-        setTimeout(() => {
-          router.push("/admindashboard");
-        }, 1500);
-      } else {
-        setMessage(data.message || "Login failed");
-      }
+      setMessage(data.message);
     } catch (err) {
       setMessage("Error connecting to server: " + err.message);
-    } finally {
-      setLoading(false);
     }
   };
+
+  if (!showForm) return null;
 
   return (
     <div
       style={{
-        position: "fixed",
-        inset: 0,
+        position: "relative",
+        width: "100%",
+        minHeight: "100vh",
         backgroundImage: "url('/images/AuthBackground.jpg')",
         backgroundSize: "cover",
         backgroundPosition: "center",
         backgroundRepeat: "no-repeat",
-        backgroundAttachment: "fixed",
-        filter: "contrast(1.05) saturate(1.1)",
         display: "flex",
         justifyContent: "center",
         alignItems: "center",
-        zIndex: 1000,
       }}
     >
       <form
@@ -81,6 +63,7 @@ export default function AdminLoginPage() {
           boxShadow: "0 8px 20px rgba(0,0,0,0.3)",
           width: "100%",
           maxWidth: "400px",
+          opacity: fadeIn ? 1 : 0,
           transition: "opacity 1s ease-in",
         }}
       >
@@ -93,12 +76,12 @@ export default function AdminLoginPage() {
             fontSize: "28px",
           }}
         >
-          Admin Login
+          Admin Forgot Password
         </h2>
 
         <input
           type="email"
-          placeholder="Email"
+          placeholder="Admin Email"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           style={{
@@ -109,22 +92,8 @@ export default function AdminLoginPage() {
             backgroundColor: "#fff",
           }}
         />
-        <input
-          type="password"
-          placeholder="Password"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          style={{
-            padding: "10px",
-            borderRadius: "5px",
-            border: "1px solid #ccc",
-            color: "#000",
-            backgroundColor: "#fff",
-          }}
-        />
         <button
           type="submit"
-          disabled={loading}
           style={{
             padding: "10px",
             borderRadius: "5px",
@@ -134,7 +103,7 @@ export default function AdminLoginPage() {
             cursor: "pointer",
           }}
         >
-          {loading ? "Logging in..." : "Login"}
+          Send Reset Link
         </button>
 
         {message && (
@@ -150,24 +119,6 @@ export default function AdminLoginPage() {
             {message}
           </p>
         )}
-
-        {/* Forgot Password + Back to User Login */}
-<div style={{ textAlign: "center", marginTop: "15px", fontFamily: "'Times New Roman', Times, serif" }}>
-  <p style={{ marginBottom: "10px" }}>
-    <a href="/adminforgotpassword" style={{ color: "#800000", fontFamily: "'Times New Roman', Times, serif" }}>
-      Forgot Password?
-    </a>
-  </p>
-  <p style={{ marginTop: "10px" }}>
-    <a
-      onClick={() => router.push("/auth?form=login")}
-      style={{ color: "#800000", cursor: "pointer", fontFamily: "'Times New Roman', Times, serif" }}
-    >
-      Back to User Login
-    </a>
-  </p>
-</div>
-
       </form>
     </div>
   );

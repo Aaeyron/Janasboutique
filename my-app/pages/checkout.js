@@ -29,11 +29,14 @@ export default function Checkout() {
 
   // Load cart & saved info
   useEffect(() => {
-    const savedCart = JSON.parse(localStorage.getItem("cart") || "[]");
-    if (savedCart.length > 0) setCartItems(savedCart);
+  const savedCart = JSON.parse(localStorage.getItem("cart") || "[]");
+  if (savedCart.length > 0) setCartItems(savedCart);
 
-    // Load saved checkout info
-    const savedInfo = JSON.parse(localStorage.getItem("savedCheckoutInfo") || "{}");
+  const currentUser = JSON.parse(localStorage.getItem("currentUser") || "{}");
+  if (currentUser.email) {
+    const savedInfo = JSON.parse(
+      localStorage.getItem(`savedCheckoutInfo_${currentUser.email}`) || "{}"
+    );
     if (savedInfo.firstName) setFirstName(savedInfo.firstName);
     if (savedInfo.lastName) setLastName(savedInfo.lastName);
     if (savedInfo.address) setAddress(savedInfo.address);
@@ -42,7 +45,9 @@ export default function Checkout() {
     if (savedInfo.zip) setZip(savedInfo.zip);
     if (savedInfo.phone) setPhone(savedInfo.phone);
     if (savedInfo.country) setCountry(savedInfo.country);
-  }, [setCartItems]);
+  }
+}, [setCartItems]);
+
 
   // Disable scroll when modal is open
   useEffect(() => {
@@ -73,94 +78,123 @@ export default function Checkout() {
     processOrder();
   };
 
-  const processOrder = async () => {
-    const currentUser = JSON.parse(localStorage.getItem("currentUser") || "{}");
-    if (!currentUser.email) {
-      setAlert("You must be logged in to place an order.");
+  // ... all your imports and hooks remain the same
+
+  const sendReceipt = async (order) => {
+  try {
+    const res = await fetch("http://localhost/Backend/cc105backend/send_receipt.php", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(order),
+    });
+    const data = await res.json();
+    if (!data.success) {
+      console.error("Receipt error:", data.message);
+    }
+  } catch (err) {
+    console.error("Failed to send receipt:", err);
+  }
+};
+
+
+const processOrder = async () => {
+  const currentUser = JSON.parse(localStorage.getItem("currentUser") || "{}");
+  if (!currentUser.email) {
+    setAlert("You must be logged in to place an order.");
+    return;
+  }
+
+  // Save user info if rememberMe is checked
+if (rememberMe) {
+  const info = {
+    firstName,
+    lastName,
+    address,
+    city,
+    state,
+    zip,
+    phone,
+    country,
+  };
+  localStorage.setItem(`savedCheckoutInfo_${currentUser.email}`, JSON.stringify(info));
+}
+
+
+  // Generate unique orderId and billingId
+  const orderId = `ORD-${Date.now()}`;
+  const billingId = `BILL-${Math.floor(Math.random() * 1000000)}`;
+
+  const order = {
+    firstName,
+    lastName,
+    email: currentUser.email,
+    address,
+    city,
+    state,
+    zipcode: zip,
+    phone,
+    cart: cartItems.map((item) => ({
+      id: item.id,
+      name: item.name,
+      image:
+        item.image || item.image_url?.replace("public/", "/") || "/images/placeholder.png",
+      quantity: item.quantity,
+      price: item.price,
+    })),
+    total,
+    shippingCost,
+    paymentMethod: selectedPayment,
+    date: new Date().toISOString(),
+    orderId,
+    billingId, // add billing ID to order payload
+  };
+
+  setIsProcessing(true);
+
+  try {
+    const res = await fetch("http://localhost/Backend/cc105backend/checkout.php", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(order),
+    });
+
+    const text = await res.text();
+    let data;
+
+    try {
+      data = JSON.parse(text);
+    } catch {
+      setAlert("Server returned invalid response. Please try again.");
       return;
     }
 
-    // Save user info if rememberMe is checked
-    if (rememberMe) {
-      const info = {
-        firstName,
-        lastName,
-        address,
-        city,
-        state,
-        zip,
-        phone,
-        country
-      };
-      localStorage.setItem("savedCheckoutInfo", JSON.stringify(info));
+    if (!data.success) {
+      setAlert(`Error: ${data.message}`);
+      return;
     }
 
-    const order = {
-      firstName,
-      lastName,
-      email: currentUser.email,
-      address,
-      city,
-      state,
-      zipcode: zip,
-      phone,
-      cart: cartItems.map((item) => ({
-        id: item.id,
-        name: item.name,
-        image: item.folder ? `/images/${item.folder}/${item.image}` : `/images/${item.image}`,
-        quantity: item.quantity,
-        price: item.price,
-      })),
-      total,
-      shippingCost,
-      paymentMethod: selectedPayment,
-      date: new Date().toISOString(),
-    };
+    // Save orders in localStorage
+    const userOrdersKey = `orders_${currentUser.email}`;
+    const existingOrders = JSON.parse(localStorage.getItem(userOrdersKey) || "[]");
+    existingOrders.push(order);
+    localStorage.setItem(userOrdersKey, JSON.stringify(existingOrders));
 
-    setIsProcessing(true);
+    // Clear cart
+    setCartItems([]);
+    localStorage.setItem("cart", JSON.stringify([]));
 
-    try {
-      const res = await fetch(
-        "http://localhost/Backend/cc105backend/checkout.php",
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(order),
-        }
-      );
+    // Send receipt email
+await sendReceipt(order);
 
-      const text = await res.text();
-      let data;
+    router.push("/thankyou");
+  } catch (err) {
+    console.error("Order error:", err);
+    setAlert("Failed to place order. Please try again.");
+  } finally {
+    setIsProcessing(false);
+  }
+};
 
-      try {
-        data = JSON.parse(text);
-      } catch {
-        setAlert("Server returned invalid response. Please try again.");
-        return;
-      }
-
-      if (!data.success) {
-        setAlert(`Error: ${data.message}`);
-        return;
-      }
-
-      const userOrdersKey = `orders_${currentUser.email}`;
-      const existingOrders = JSON.parse(localStorage.getItem(userOrdersKey) || "[]");
-      existingOrders.push(order);
-      localStorage.setItem(userOrdersKey, JSON.stringify(existingOrders));
-
-      setCartItems([]);
-      localStorage.setItem("cart", JSON.stringify([]));
-
-      router.push("/thankyou");
-
-    } catch (err) {
-      console.error("Order error:", err);
-      setAlert("Failed to place order. Please try again.");
-    } finally {
-      setIsProcessing(false);
-    }
-  };
 
   const handleGcashPaymentComplete = async () => {
     setIsProcessing(true);
@@ -377,37 +411,76 @@ export default function Checkout() {
         </div>
 
         {/* Order Summary */}
-        <div className="bg-white border border-gray-300 rounded-lg p-6 shadow-sm text-black">
-          <h2 className="text-xl font-bold mb-4">Your Order</h2>
-          <div className="space-y-4">
-            {cartItems.map((item, idx) => (
-              <div key={idx} className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <div className="w-16 h-16 relative flex-shrink-0">
-                    <Image
-                      src={item.image.startsWith("/") ? item.image : `/images/${item.image}`}
-                      alt={item.name}
-                      fill
-                      className="object-contain rounded"
-                    />
-                  </div>
-                  <span>
-                    {item.name} x {item.quantity}
-                  </span>
-                </div>
-                <span>₱{(item.price * item.quantity).toLocaleString()}</span>
-              </div>
-            ))}
-            <div className="flex justify-between font-semibold mt-2">
-              <span>Shipping:</span>
-              <span>₱{shippingCost.toLocaleString()}</span>
-            </div>
-            <div className="flex justify-between font-bold text-lg mt-2">
-              <span>Total:</span>
-              <span>₱{total.toLocaleString()}</span>
-            </div>
-          </div>
+<div className="bg-white border border-gray-300 rounded-lg p-6 shadow-sm text-black">
+  <h2 className="text-xl font-bold mb-4">Your Order</h2>
+  <div className="space-y-4">
+    {cartItems.map((item, idx) => (
+      <div key={idx} className="flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          <div className="w-16 h-16 relative flex-shrink-0">
+            <Image
+              src={
+                item?.image_url
+                  ? "/" + item.image_url.replace("public/", "")
+                  : "/placeholder.png"
+              }
+              alt={item?.name || "Product"}
+              fill
+              className="object-contain rounded"
+            />
+          </div>  
+          <span>
+            {item.name} x {item.quantity}
+          </span>
         </div>
+        <span>₱{(item.price * item.quantity).toLocaleString()}</span>
+      </div>
+    ))}
+    <div className="flex justify-between font-semibold mt-2">
+      <span>Shipping:</span>
+      <span>₱{shippingCost.toLocaleString()}</span>
+    </div>
+    <div className="flex justify-between font-bold text-lg mt-2">
+      <span>Total:</span>
+      <span>₱{total.toLocaleString()}</span>
+    </div>
+
+    {/* Cancel Button */}
+<div className="mt-4 text-center">
+  <button
+    type="button"
+    onClick={() => {
+      // Clear cart
+      setCartItems([]);
+      localStorage.setItem("cart", JSON.stringify([]));
+
+      // Clear saved checkout info for current user
+      const currentUser = JSON.parse(localStorage.getItem("currentUser") || "{}");
+      if (currentUser.email) {
+        localStorage.removeItem(`savedCheckoutInfo_${currentUser.email}`);
+      }
+
+      // Also reset form fields
+      setFirstName("");
+      setLastName("");
+      setAddress("");
+      setCity("");
+      setState("");
+      setZip("");
+      setPhone("");
+      setCountry("Philippines");
+      setRememberMe(false);
+    }}
+    className="px-4 py-2 border border-black bg-white text-black rounded transition hover:bg-gray-100 cursor-pointer"
+    style={{ fontFamily: "'Times New Roman', Times, serif" }}
+  >
+    Cancel
+  </button>
+</div>
+
+  </div>
+</div>
+
       </main>
 
       {/* GCash Modal */}
@@ -423,7 +496,7 @@ export default function Checkout() {
               <p className="font-normal text-sm text-gray-700">
                 Send your payment to the following GCash number:
               </p>
-              <p className="font-normal text-lg text-gray-900">0917-123-4567</p>
+              <p className="font-normal text-lg text-gray-900">0948-892-9764</p>
               <p className="font-normal text-lg text-gray-900">
                 Amount: ₱{total.toLocaleString()}
               </p>

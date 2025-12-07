@@ -4,9 +4,19 @@ import QuickViewModal from "./QuickViewModal";
 import Image from "next/image";
 import { motion } from "framer-motion";
 
-export default function ProductCard({ product, onAddToCart, index }) {
+export default function ProductCard({ product, onAddToCart, index, currentUser }) {
   const [showModal, setShowModal] = useState(false);
   const [hover, setHover] = useState(false);
+
+  // NEW: State to handle selected size (for perfumes)
+  const [selectedSize, setSelectedSize] = useState(
+    product.sizes ? Object.keys(product.sizes)[0] : null
+  );
+
+  // NEW: Calculate price dynamically based on selected size
+  const displayPrice = product.sizes
+    ? product.sizes[selectedSize]
+    : product.price;
 
   return (
     <motion.div
@@ -15,9 +25,9 @@ export default function ProductCard({ product, onAddToCart, index }) {
       whileInView={{ opacity: 1 }}
       viewport={{ once: false, amount: 0.2 }}
       transition={{
-        duration: 0.6, // 👈 faster and smoother
+        duration: 0.6,
         ease: "easeOut",
-        delay: index * 0.05, // 👈 gentle stagger
+        delay: index * 0.05,
       }}
       style={{ opacity: 1 }}
     >
@@ -28,16 +38,16 @@ export default function ProductCard({ product, onAddToCart, index }) {
       >
         <Image
           src={
-            product?.image?.startsWith("/images/")
-              ? product.image
-              : `/images/${product.image}`
+            product?.image_url
+              ? "/" + product.image_url.replace("public/", "")
+              : "/placeholder.png"
           }
           alt={product?.name || "Product"}
           fill
           className={`object-contain w-full h-auto max-h-full max-w-full transition-transform duration-500 ${
             hover ? "scale-105" : "scale-100"
-          }`}
-        />
+          }`} 
+        />  
 
         {/* Quick View Button */}
         <div
@@ -57,9 +67,10 @@ export default function ProductCard({ product, onAddToCart, index }) {
 
       {showModal && (
         <QuickViewModal
-          product={product}
+          product={{ ...product, price: displayPrice }}
           onClose={() => setShowModal(false)}
           onAddToCart={onAddToCart}
+          currentUser={currentUser} // ✅ Pass currentUser to modal
         />
       )}
     </motion.div>

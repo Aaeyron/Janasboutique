@@ -32,7 +32,6 @@ export default function Navbar({ cartItems = [], onRemoveItem = () => {} }) {
   useEffect(() => {
     const handleScroll = () => {
       const currentScroll = window.scrollY;
-
       if (currentScroll > lastScrollY) {
         setShowTitle(false);
       } else {
@@ -40,10 +39,8 @@ export default function Navbar({ cartItems = [], onRemoveItem = () => {} }) {
           setShowTitle(true);
         }
       }
-
       setLastScrollY(currentScroll);
     };
-
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
   }, [lastScrollY]);
@@ -75,10 +72,25 @@ export default function Navbar({ cartItems = [], onRemoveItem = () => {} }) {
 
   // ✅ Profile icon click logic
   const handleProfileClick = () => {
-    if (currentUser) {
-      router.push("/profile"); // go to profile if logged in
+    if (!currentUser) {
+      router.push("/auth");
+      return;
+    }
+
+    const isAdmin = currentUser?.is_admin === 1;
+    if (isAdmin) {
+      router.push("/admindashboard");
     } else {
-      router.push("/auth"); // go to auth if not logged in
+      router.push("/profile");
+    }
+  };
+
+  const handleHomeClick = () => {
+    const isAdmin = currentUser?.is_admin === 1;
+    if (isAdmin) {
+      router.push("/admindashboard");
+    } else {
+      router.push("/");
     }
   };
 
@@ -88,17 +100,13 @@ export default function Navbar({ cartItems = [], onRemoveItem = () => {} }) {
       style={{ backgroundColor: "#B29785" }}
     >
       {/* Boutique Logo */}
-      <div className="navbar-logo-container">
+      <div className="navbar-logo-container" onClick={handleHomeClick} style={{ cursor: "pointer" }}>
         <div
           className={`transition-all duration-500 transform ${
             showTitle ? "opacity-100 translate-y-0" : "opacity-0 -translate-y-6"
           }`}
         >
-          <img
-            src="/images/JANA.png"
-            alt="JANA's Boutique Logo"
-            className="navbar-logo"
-          />
+          <img src="/images/JANA.png" alt="JANA's Boutique Logo" className="navbar-logo" />
         </div>
       </div>
 
@@ -136,7 +144,7 @@ export default function Navbar({ cartItems = [], onRemoveItem = () => {} }) {
             onMouseLeave={() => setHoverShoes(false)}
           >
             <button
-              className="relative flex items-center gap-1 hover:text-gray-300 after:content-[''] after:absolute after:left-0 after:bottom-[-2px] after:w-0 after:h-[1px] after:bg-white hover:after:w-full after:transition-all after:duration-300"
+              className="relative flex items-center gap-1 hover:text-gray-300 after:content-[''] after:absolute after:left-0 after:bottom-[-2px] after:w-0 after:h-[1px] after:bg-white hover:after:w-full after:transition-all after:duration-300 cursor-pointer"
               onClick={handleToggleDropdown}
               style={{ fontFamily: "'Times New Roman', Times, serif" }}
             >
@@ -154,19 +162,13 @@ export default function Navbar({ cartItems = [], onRemoveItem = () => {} }) {
                 }`}
               >
                 <Link href="/shoes/sandals" legacyBehavior>
-                  <a className="relative block w-full px-4 py-2 text-white hover:bg-[#C2A88D] after:content-[''] after:absolute after:left-0 after:bottom-0 after:w-0 after:h-[1px] after:bg-white hover:after:w-full after:transition-all after:duration-300">
-                    Sandals
-                  </a>
+                  <a className="relative block w-full px-4 py-2 text-white hover:bg-[#C2A88D]">Sandals</a>
                 </Link>
                 <Link href="/shoes/heels" legacyBehavior>
-                  <a className="relative block w-full px-4 py-2 text-white hover:bg-[#C2A88D] after:content-[''] after:absolute after:left-0 after:bottom-0 after:w-0 after:h-[1px] after:bg-white hover:after:w-full after:transition-all after:duration-300">
-                    Heels
-                  </a>
+                  <a className="relative block w-full px-4 py-2 text-white hover:bg-[#C2A88D]">Heels</a>
                 </Link>
                 <Link href="/shoes/flats" legacyBehavior>
-                  <a className="relative block w-full px-4 py-2 text-white hover:bg-[#C2A88D] after:content-[''] after:absolute after:left-0 after:bottom-0 after:w-0 after:h-[1px] after:bg-white hover:after:w-full after:transition-all after:duration-300">
-                    Flats
-                  </a>
+                  <a className="relative block w-full px-4 py-2 text-white hover:bg-[#C2A88D]">Flats</a>
                 </Link>
               </div>
             )}
@@ -179,7 +181,7 @@ export default function Navbar({ cartItems = [], onRemoveItem = () => {} }) {
             onMouseLeave={() => setHoverAccessories(false)}
           >
             <button
-              className="relative flex items-center gap-1 hover:text-gray-300 after:content-[''] after:absolute after:left-0 after:bottom-[-2px] after:w-0 after:h-[1px] after:bg-white hover:after:w-full after:transition-all after:duration-300"
+              className="relative flex items-center gap-1 hover:text-gray-300 after:content-[''] after:absolute after:left-0 after:bottom-[-2px] after:w-0 after:h-[1px] after:bg-white hover:after:w-full after:transition-all after:duration-300 cursor-pointer"
               onClick={handleToggleAccessoriesDropdown}
               style={{ fontFamily: "'Times New Roman', Times, serif" }}
             >
@@ -197,29 +199,19 @@ export default function Navbar({ cartItems = [], onRemoveItem = () => {} }) {
                 }`}
               >
                 <Link href="/accessories/handbags" legacyBehavior>
-                  <a className="relative block w-full px-4 py-2 text-white hover:bg-[#C2A88D] after:content-[''] after:absolute after:left-0 after:bottom-0 after:w-0 after:h-[1px] after:bg-white hover:after:w-full after:transition-all after:duration-300">
-                    Handbags
-                  </a>
+                  <a className="relative block w-full px-4 py-2 text-white hover:bg-[#C2A88D]">Handbags</a>
                 </Link>
                 <Link href="/accessories/earrings" legacyBehavior>
-                  <a className="relative block w-full px-4 py-2 text-white hover:bg-[#C2A88D] after:content-[''] after:absolute after:left-0 after:bottom-0 after:w-0 after:h-[1px] after:bg-white hover:after:w-full after:transition-all after:duration-300">
-                    Earrings
-                  </a>
+                  <a className="relative block w-full px-4 py-2 text-white hover:bg-[#C2A88D]">Earrings</a>
                 </Link>
                 <Link href="/accessories/necklace" legacyBehavior>
-                  <a className="relative block w-full px-4 py-2 text-white hover:bg-[#C2A88D] after:content-[''] after:absolute after:left-0 after:bottom-0 after:w-0 after:h-[1px] after:bg-white hover:after:w-full after:transition-all after:duration-300">
-                    Necklaces
-                  </a>
+                  <a className="relative block w-full px-4 py-2 text-white hover:bg-[#C2A88D]">Necklaces</a>
                 </Link>
                 <Link href="/accessories/bracelets" legacyBehavior>
-                  <a className="relative block w-full px-4 py-2 text-white hover:bg-[#C2A88D] after:content-[''] after:absolute after:left-0 after:bottom-0 after:w-0 after:h-[1px] after:bg-white hover:after:w-full after:transition-all after:duration-300">
-                    Bracelets
-                  </a>
+                  <a className="relative block w-full px-4 py-2 text-white hover:bg-[#C2A88D]">Bracelets</a>
                 </Link>
                 <Link href="/accessories/rings" legacyBehavior>
-                  <a className="relative block w-full px-4 py-2 text-white hover:bg-[#C2A88D] after:content-[''] after:absolute after:left-0 after:bottom-0 after:w-0 after:h-[1px] after:bg-white hover:after:w-full after:transition-all after:duration-300">
-                    Rings
-                  </a>
+                  <a className="relative block w-full px-4 py-2 text-white hover:bg-[#C2A88D]">Rings</a>
                 </Link>
               </div>
             )}
@@ -236,29 +228,29 @@ export default function Navbar({ cartItems = [], onRemoveItem = () => {} }) {
 
         {/* RIGHT SIDE → Profile & Cart */}
         <div className="flex items-center gap-6">
-          {/* ✅ Updated Profile Icon */}
+          {/* ✅ Profile Icon */}
           <FaUserCircle
             size={28}
             className="cursor-pointer hover:text-gray-300"
             onClick={handleProfileClick}
           />
 
-          <div
-            className="relative cursor-pointer"
-            onClick={() => setIsCartOpen(true)}
-          >
-            <FaShoppingCart size={28} />
-            {cartItems.length > 0 && (
-              <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs px-1 rounded-full">
-                {cartItems.length}
-              </span>
-            )}
-          </div>
+          {/* Cart → ONLY show if NOT admin */}
+          {!currentUser?.is_admin && (
+            <div className="relative cursor-pointer" onClick={() => setIsCartOpen(true)}>
+              <FaShoppingCart size={28} />
+              {cartItems.length > 0 && (
+                <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs px-1 rounded-full">
+                  {cartItems.length}
+                </span>
+              )}
+            </div>
+          )}
         </div>
       </div>
 
       {/* Cart Sidebar */}
-      {isCartOpen && (
+      {isCartOpen && !currentUser?.is_admin && (
         <CartSidebar
           cartItems={cartItems}
           onClose={() => setIsCartOpen(false)}

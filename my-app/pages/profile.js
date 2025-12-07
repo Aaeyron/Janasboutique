@@ -2,6 +2,7 @@ import { useEffect, useState, useRef } from "react";
 import { useRouter } from "next/router";
 import { BsPerson } from "react-icons/bs";
 import { FaChevronDown } from "react-icons/fa";
+import { FaTrash } from "react-icons/fa";
 import Image from "next/image";
 
 export default function Orders() {
@@ -58,6 +59,14 @@ export default function Orders() {
     }, 300);
   };
 
+  // Helper to fix image paths for Next.js Image component
+const getImagePath = (path) => {
+  if (!path || path === "undefined") return "/images/placeholder.png"; // fallback
+  // Ensure relative paths start with a leading slash
+  return path.startsWith("/") ? path : "/" + path;
+};
+
+
   return (
     <div className="min-h-screen bg-[#f7f7f7]">
       {/* Navbar */}
@@ -80,7 +89,7 @@ export default function Orders() {
 
           {/* Profile Dropdown */}
           <div className="relative" ref={dropdownRef}>
-            <button onClick={() => setDropdownOpen(!dropdownOpen)} className="flex items-center gap-1 transition">
+            <button onClick={() => setDropdownOpen(!dropdownOpen)} className="flex items-center gap-1 transition cursor-pointer">
               <div className="bg-white rounded-full p-1 shadow-md">
                 <BsPerson size={22} className="text-gray-800" />
               </div>
@@ -101,17 +110,11 @@ export default function Orders() {
                   <span className="text-black font-normal text-sm tracking-tight">{user?.email}</span>
                 </div>
                 <button
-                  onClick={() => router.push("/settings")}
-                  className="text-left text-black font-normal hover:bg-gray-100 rounded px-2 py-1 text-sm tracking-tight transition"
-                >
-                  Settings
-                </button>
-                <button
                   onClick={() => {
                     localStorage.removeItem("currentUser");
                     router.push("/");
                   }}
-                  className="text-left text-black font-normal hover:bg-gray-100 rounded px-2 py-1 text-sm tracking-tight transition"
+                  className="text-left text-black font-normal hover:bg-gray-100 rounded px-2 py-1 text-sm tracking-tight transition cursor-pointer"
                 >
                   Sign out
                 </button>
@@ -128,17 +131,23 @@ export default function Orders() {
             className="text-3xl"
             style={{ fontFamily: "'Times New Roman', Times, serif", color: "black" }}
           >
-            Orders
+            Order History
           </h1>
 
           {/* CLEAR BUTTON */}
           {orders.length > 0 && (
             <button
-              onClick={clearOrders}
-              className="px-4 py-2 text-sm bg-red-500 text-black rounded hover:bg-red-600 transition cursor-pointer"
-            >
-              Clear Orders
-            </button>
+  onClick={clearOrders}
+  className="p-2 rounded border border-black bg-white transition cursor-pointer flex items-center justify-center"
+>
+  <FaTrash
+    className="text-white"
+    size={18}
+    style={{ stroke: "black", strokeWidth: 20 }}
+  />
+</button>
+
+
           )}
         </div>
 
@@ -161,22 +170,27 @@ export default function Orders() {
                 <p className="text-gray-700 mb-3 text-sm">Payment: {order.paymentMethod}</p>
 
                 {(order.cart || []).map((item, i) => (
-                  console.log(item.image),
-                  <div key={i} className="flex items-center justify-between mb-2 border-b border-gray-100 pb-2">
-                    <div className="flex items-center gap-3">
-                      <div className="w-14 h-14 relative rounded overflow-hidden">
-                        <Image src={item.image} alt={item.name} fill className="object-contain" />
-                      </div>
-                      <div className="text-gray-800 text-sm">
-                        {item.name} × {item.quantity}
-                        <div className="text-gray-500 text-xs">₱{item.price.toLocaleString()} each</div>
-                      </div>
-                    </div>
-                    <div className="text-gray-800 text-sm">
-                      ₱{(item.price * item.quantity).toLocaleString()}
-                    </div>
-                  </div>
-                ))}
+  <div key={i} className="flex items-center justify-between mb-2 border-b border-gray-100 pb-2">
+    <div className="flex items-center gap-3">
+      <div className="w-14 h-14 relative rounded overflow-hidden">
+        <Image
+  src={getImagePath(item.image)}
+  alt={item?.name || "Product"}
+  fill
+  className="object-contain rounded"
+/>
+
+      </div>
+      <div className="text-gray-800 text-sm">
+        {item.name} × {item.quantity}
+        <div className="text-gray-500 text-xs">₱{item.price.toLocaleString()} each</div>
+      </div>
+    </div>
+    <div className="text-gray-800 text-sm">
+      ₱{(item.price * item.quantity).toLocaleString()}
+    </div>
+  </div>
+))}
 
                 <div className="flex justify-between text-gray-700 text-sm mt-2">
                   <span>Shipping:</span>
