@@ -30,7 +30,7 @@ export default function Breadcrumb({ paths }) {
               <span
                 style={{
                   fontFamily: "Times New Roman, serif",
-                  color: "#B0B0B0", // neutral gray for last item
+                  color: "#B0B0B0", 
                   textDecoration: "none",
                 }}
               >

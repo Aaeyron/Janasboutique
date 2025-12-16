@@ -1,8 +1,7 @@
 import { useEffect, useState, useRef } from "react";
 import { useRouter } from "next/router";
 import { BsPerson } from "react-icons/bs";
-import { FaChevronDown } from "react-icons/fa";
-import { FaTrash } from "react-icons/fa";
+import { FaChevronDown, FaTrash } from "react-icons/fa";
 import Image from "next/image";
 
 export default function Orders() {
@@ -23,7 +22,7 @@ export default function Orders() {
     }
   }, [router]);
 
-  // Load user's orders from localStorage
+  // Load user's orders
   useEffect(() => {
     if (user) {
       const userOrdersKey = `orders_${user.email}`;
@@ -35,7 +34,6 @@ export default function Orders() {
   // Clear all orders
   const clearOrders = () => {
     if (!user) return;
-
     const userOrdersKey = `orders_${user.email}`;
     localStorage.setItem(userOrdersKey, JSON.stringify([]));
     setOrders([]);
@@ -54,18 +52,15 @@ export default function Orders() {
 
   const handleShopClick = () => {
     setZoomAnim(true);
-    setTimeout(() => {
-      router.push("/");
-    }, 300);
+    setTimeout(() => router.push("/"), 300);
   };
 
-  // Helper to fix image paths for Next.js Image component
-const getImagePath = (path) => {
-  if (!path || path === "undefined") return "/images/placeholder.png"; // fallback
-  // Ensure relative paths start with a leading slash
-  return path.startsWith("/") ? path : "/" + path;
-};
-
+  // Universal image path handler for old & new products
+  const getImagePath = (imageUrl) => {
+    if (!imageUrl || imageUrl === "undefined") return "/images/placeholder.png";
+    if (imageUrl.startsWith("http")) return imageUrl; // new products with full URL
+    return "/" + imageUrl.replace("public/", ""); // old local images
+  };
 
   return (
     <div className="min-h-screen bg-[#f7f7f7]">
@@ -117,6 +112,7 @@ const getImagePath = (path) => {
                   className="text-left text-black font-normal hover:bg-gray-100 rounded px-2 py-1 text-sm tracking-tight transition cursor-pointer"
                 >
                   Sign out
+                  
                 </button>
               </div>
             )}
@@ -134,20 +130,13 @@ const getImagePath = (path) => {
             Order History
           </h1>
 
-          {/* CLEAR BUTTON */}
           {orders.length > 0 && (
             <button
-  onClick={clearOrders}
-  className="p-2 rounded border border-black bg-white transition cursor-pointer flex items-center justify-center"
->
-  <FaTrash
-    className="text-white"
-    size={18}
-    style={{ stroke: "black", strokeWidth: 20 }}
-  />
-</button>
-
-
+              onClick={clearOrders}
+              className="p-2 rounded border border-black bg-white transition cursor-pointer flex items-center justify-center"
+            >
+              <FaTrash className="text-white" size={18} style={{ stroke: "black", strokeWidth: 20 }} />
+            </button>
           )}
         </div>
 
@@ -170,27 +159,26 @@ const getImagePath = (path) => {
                 <p className="text-gray-700 mb-3 text-sm">Payment: {order.paymentMethod}</p>
 
                 {(order.cart || []).map((item, i) => (
-  <div key={i} className="flex items-center justify-between mb-2 border-b border-gray-100 pb-2">
-    <div className="flex items-center gap-3">
-      <div className="w-14 h-14 relative rounded overflow-hidden">
-        <Image
-  src={getImagePath(item.image)}
-  alt={item?.name || "Product"}
-  fill
-  className="object-contain rounded"
-/>
-
-      </div>
-      <div className="text-gray-800 text-sm">
-        {item.name} × {item.quantity}
-        <div className="text-gray-500 text-xs">₱{item.price.toLocaleString()} each</div>
-      </div>
-    </div>
-    <div className="text-gray-800 text-sm">
-      ₱{(item.price * item.quantity).toLocaleString()}
-    </div>
-  </div>
-))}
+                  <div key={i} className="flex items-center justify-between mb-2 border-b border-gray-100 pb-2">
+                    <div className="flex items-center gap-3">
+                      <div className="w-14 h-14 relative rounded overflow-hidden">
+                        <Image
+                          src={getImagePath(item.image || item.image_url)}
+                          alt={item?.name || "Product"}
+                          fill
+                          className="object-contain rounded"
+                        />
+                      </div>
+                      <div className="text-gray-800 text-sm">
+                        {item.name} × {item.quantity}
+                        <div className="text-gray-500 text-xs">₱{item.price.toLocaleString()} each</div>
+                      </div>
+                    </div>
+                    <div className="text-gray-800 text-sm">
+                      ₱{(item.price * item.quantity).toLocaleString()}
+                    </div>
+                  </div>
+                ))}
 
                 <div className="flex justify-between text-gray-700 text-sm mt-2">
                   <span>Shipping:</span>
@@ -212,15 +200,9 @@ const getImagePath = (path) => {
           animation: zoomIn 0.3s ease forwards;
         }
         @keyframes zoomIn {
-          0% {
-            transform: scale(1);
-          }
-          50% {
-            transform: scale(1.2);
-          }
-          100% {
-            transform: scale(1);
-          }
+          0% { transform: scale(1); }
+          50% { transform: scale(1.2); }
+          100% { transform: scale(1); }
         }
       `}</style>
     </div>

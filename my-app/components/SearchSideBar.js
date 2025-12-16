@@ -81,7 +81,7 @@ export default function SearchSidebar({ onClose }) {
 
       {/* Sidebar */}
       <div
-        className={`fixed top-0 left-0 w-96 h-full bg-white shadow-lg p-4 z-50 transform transition-transform duration-300 ${
+        className={`fixed top-0 left-0 w-96 h-full bg-white shadow-lg p-4 z-50 transform transition-transform duration-300 font-serif ${
           isVisible ? "translate-x-0" : "-translate-x-full"
         }`}
       >
@@ -135,13 +135,10 @@ export default function SearchSidebar({ onClose }) {
           ))}
 
           {query && filtered.length === 0 && (
-            <p className="text-gray-500 text-sm text-center">
-              No results found
-            </p>
+            <p className="text-gray-500 text-sm text-center">No results found</p>
           )}
         </div>
       </div>
     </>
   );
 }
-  

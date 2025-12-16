@@ -8,19 +8,24 @@ export default function QuickViewModal({ product, onClose, currentUser }) {
   const router = useRouter();
   if (!product) return null;
 
-  const { cartItems, addToCart } = useContext(CartContext);
+  const { addToCart } = useContext(CartContext);
 
   // Determine product type based on folder
   const folder = product?.folder?.toLowerCase() || "";
 
-  const isFootwear = ["flats", "heels", "sandals"].includes(folder);
-  const isPerfume = folder === "perfumes";
-  const isEarring = folder === "earrings";
-  const isNecklace = folder === "necklace";
-  const isBracelet = folder === "bracelets";
-  const isHandbag = folder === "handbags";
-  const isRing = folder === "rings";
-
+  // FIXED: Detect types using includes()
+  const isFootwear = folder.includes("flats") || folder.includes("heels") || folder.includes("sandals");
+  const isPerfume = folder.includes("perfumes");
+  const isEarring = folder.includes("earrings");
+  const isNecklace = folder.includes("necklace");
+  const isBracelet = folder.includes("bracelets");
+  const isHandbag = folder.includes("handbags");
+  const isRing = folder.includes("rings");
+  const isTop = folder === "tops";
+  const isBottom = folder === "bottoms";
+  const isDress = folder === "dresses";
+  
+  // Set default size for each type
   const defaultSize = isFootwear
     ? "39"
     : isPerfume
@@ -29,6 +34,8 @@ export default function QuickViewModal({ product, onClose, currentUser }) {
     ? "16 inches"
     : isBracelet
     ? "Medium (6.5–7 inches)"
+    : isEarring 
+    ? null
     : isRing
     ? "6"
     : isHandbag
@@ -39,6 +46,7 @@ export default function QuickViewModal({ product, onClose, currentUser }) {
   const [quantity, setQuantity] = useState(1);
   const [show, setShow] = useState(false);
 
+  // FIXED: Set exact size options
   const sizeOptions = isFootwear
     ? ["36", "37", "38", "39", "40", "41"]
     : isPerfume
@@ -47,11 +55,24 @@ export default function QuickViewModal({ product, onClose, currentUser }) {
     ? ["14 inches", "16 inches", "18 inches", "20 inches", "24 inches"]
     : isBracelet
     ? ["Small (6–6.5 inches)", "Medium (6.5–7 inches)", "Large (7–7.5 inches)"]
+    : isEarring 
+     ? []
     : isRing
     ? ["5", "5.5", "6", "6.5", "7", "7.5", "8", "8.5"]
-    : ["Small", "Medium", "Large"];
+    : isTop || isBottom || isDress
+    ? ["Small", "Medium", "Large"]
+    : isHandbag 
+    ? [] // NO size options for handbags
+    : [];
 
   const displayedPrice = isPerfume && product.prices ? product.prices[size] : product.price;
+
+  // FIX: Handle backend image paths correctly
+  const imageSrc = product?.image_url
+    ? product.image_url.startsWith("http")
+      ? product.image_url
+      : "/" + product.image_url.replace("public/", "")
+    : "/placeholder.png";
 
   useEffect(() => {
     setShow(true);
@@ -83,8 +104,7 @@ export default function QuickViewModal({ product, onClose, currentUser }) {
       alert("Sorry, this product is out of stock.");
       return;
     }
-    const finalQuantity = 1; // always add only 1 item
-    addToCart(product, finalQuantity, size); 
+    addToCart(product, 1, size);
     router.push("/checkout");
   };
 
@@ -107,7 +127,7 @@ export default function QuickViewModal({ product, onClose, currentUser }) {
         {/* Left - Image */}
         <div className="w-1/2 flex items-center justify-center bg-white relative">
           <Image
-            src={product?.image_url ? "/" + product.image_url.replace("public/", "") : "/placeholder.png"}
+            src={imageSrc}
             alt={product?.name || "Product"}
             fill
             className="object-contain w-full h-auto max-h-full max-w-full"
@@ -120,10 +140,20 @@ export default function QuickViewModal({ product, onClose, currentUser }) {
           <p className="text-gray-600 mb-4">₱{Number(displayedPrice).toLocaleString()}</p>
 
           {/* Sizes */}
-          {!isHandbag && !isEarring && (
+          {sizeOptions.length > 0 && (
             <div className="mb-4">
               <p className="mb-2 text-black">
-                {isPerfume ? `Size: ${size}` : isFootwear ? `Size: ${size}` : isNecklace ? `Length: ${size}` : isBracelet ? `Wrist Size: ${size}` : isRing ? `Ring Size: ${size}` : `Size: ${size}`}
+                {isPerfume
+                  ? `Size: ${size}`
+                  : isFootwear
+                  ? `Size: ${size}`
+                  : isNecklace
+                  ? `Length: ${size}`
+                  : isBracelet
+                  ? `Wrist Size: ${size}`
+                  : isRing
+                  ? `Ring Size: ${size}`
+                  : `Size: ${size}`}
               </p>
               <div className="flex flex-wrap">
                 {sizeOptions.map((s) => (

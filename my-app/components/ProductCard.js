@@ -8,15 +8,20 @@ export default function ProductCard({ product, onAddToCart, index, currentUser }
   const [showModal, setShowModal] = useState(false);
   const [hover, setHover] = useState(false);
 
-  // NEW: State to handle selected size (for perfumes)
   const [selectedSize, setSelectedSize] = useState(
     product.sizes ? Object.keys(product.sizes)[0] : null
   );
 
-  // NEW: Calculate price dynamically based on selected size
   const displayPrice = product.sizes
     ? product.sizes[selectedSize]
     : product.price;
+
+  // FIX: Use the full URL from backend if it starts with http
+  const imageSrc = product?.image_url
+    ? product.image_url.startsWith("http")
+      ? product.image_url
+      : "/" + product.image_url.replace("public/", "")
+    : "/placeholder.png";
 
   return (
     <motion.div
@@ -37,11 +42,7 @@ export default function ProductCard({ product, onAddToCart, index, currentUser }
         onMouseLeave={() => setHover(false)}
       >
         <Image
-          src={
-            product?.image_url
-              ? "/" + product.image_url.replace("public/", "")
-              : "/placeholder.png"
-          }
+          src={imageSrc}
           alt={product?.name || "Product"}
           fill
           className={`object-contain w-full h-auto max-h-full max-w-full transition-transform duration-500 ${
@@ -49,7 +50,6 @@ export default function ProductCard({ product, onAddToCart, index, currentUser }
           }`} 
         />  
 
-        {/* Quick View Button */}
         <div
           className={`absolute bottom-2 left-1/2 transform -translate-x-1/2 transition-opacity duration-300 ${
             hover ? "opacity-100" : "opacity-0"
@@ -70,7 +70,7 @@ export default function ProductCard({ product, onAddToCart, index, currentUser }
           product={{ ...product, price: displayPrice }}
           onClose={() => setShowModal(false)}
           onAddToCart={onAddToCart}
-          currentUser={currentUser} // ✅ Pass currentUser to modal
+          currentUser={currentUser}
         />
       )}
     </motion.div>

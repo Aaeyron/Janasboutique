@@ -418,17 +418,26 @@ await sendReceipt(order);
       <div key={idx} className="flex items-center justify-between">
         <div className="flex items-center gap-3">
           <div className="w-16 h-16 relative flex-shrink-0">
-            <Image
-              src={
-                item?.image_url
-                  ? "/" + item.image_url.replace("public/", "")
-                  : "/placeholder.png"
-              }
-              alt={item?.name || "Product"}
-              fill
-              className="object-contain rounded"
-            />
-          </div>  
+  {(() => {
+    const imageSrc = item?.image_url
+      ? item.image_url.startsWith("http")
+        ? item.image_url // full backend URL
+        : "/" + item.image_url.replace("public/", "") // old local image
+      : item?.image
+        ? "/" + item.image // fallback for very old products
+        : "/placeholder.png"; // default placeholder
+
+    return (
+      <Image
+        src={imageSrc}
+        alt={item?.name || "Product"}
+        fill
+        className="object-contain rounded" 
+      />
+    );
+  })()}
+</div>
+
           <span>
             {item.name} x {item.quantity}
           </span>

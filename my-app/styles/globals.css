@@ -161,6 +161,11 @@ body {
   scrollbar-color: #c0a080 #f1f1f1;
 }
 
+/* globals.css or any main CSS file */
+.font-serif {
+  font-family: 'Times New Roman', Times, serif;
+}
+
 
 
 

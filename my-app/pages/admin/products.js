@@ -471,7 +471,7 @@
                   </button>
                   {accessoriesOpen && (
                     <div className="flex flex-col ml-4 border-l border-gray-300">
-                      {["Handbags", "Necklace", "Rings", "Bracelets"].map((sub) => (
+                      {["Handbags", "Necklace", "Rings", "Bracelets", "Earrings"].map((sub) => (
                         <button
                           key={sub}
                           className="text-left px-3 py-2 hover:bg-gray-100 transition"

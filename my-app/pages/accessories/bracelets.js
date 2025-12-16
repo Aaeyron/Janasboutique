@@ -12,24 +12,36 @@ export default function Bracelets() {
 
   // Fetch products from PHP backend
   useEffect(() => {
-    async function fetchProducts() {
-      try {
-        const res = await fetch(
-          "http://127.0.0.1/localhost/Backend/CC105Backend/getProducts.php?folder=bracelets"
-        );
-        const data = await res.json();
-        if (data.success) setProducts(data.products);
-        else console.error("Failed to fetch products:", data.message);
-      } catch (err) {
-        console.error("Error fetching products:", err);
-      } finally {
+  async function fetchProducts() {
+    try {
+      // Use 127.0.0.1 instead of localhost for better compatibility
+      const res = await fetch(
+        "http://127.0.0.1/Backend/CC105Backend/getProducts.php?folder=bracelets"
+      );
+
+      // Check if response is ok
+      if (!res.ok) {
+        console.error("HTTP error:", res.status, res.statusText);
         setLoading(false);
+        return;
       }
+
+      const data = await res.json();
+
+      if (data.success) {
+        setProducts(data.products);
+      } else {
+        console.error("Failed to fetch products:", data.message);
+      }
+    } catch (err) {
+      console.error("Error fetching products:", err);
+    } finally {
+      setLoading(false);
     }
+  }
 
-    fetchProducts();
-  }, []);
-
+  fetchProducts();
+}, []);
   return (
     <div>
       <Navbar cartItems={cartItems} onRemoveItem={removeFromCart} />

@@ -158,7 +158,7 @@ export default function Home({ cartItems, setCartItems }) {
 
 
       {/* Footer */}
-<footer className="py-12" style={{ backgroundColor: "#B29785", fontFamily: "'Playfair Display', serif" }}>
+<footer className="py-12" style={{ backgroundColor: "#585858ff", fontFamily: "'Playfair Display', serif" }}>
   <div className="max-w-6xl mx-auto px-6 md:px-12 grid grid-cols-1 md:grid-cols-3 gap-10">
 
     {/* About / Brand (Left) */}

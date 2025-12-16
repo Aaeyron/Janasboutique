@@ -64,13 +64,25 @@ export default function CartSidebar({ cartItems, onClose, onRemoveItem }) {
                 <div key={idx} className="flex flex-col bg-white rounded-lg p-2 shadow-sm">
                   <div className="flex items-start justify-between">
                     <div className="w-16 h-16 relative flex-shrink-0">
-                      <Image
-                        src={item?.image_url ? "/" + item.image_url.replace("public/", "") : "/placeholder.png"}
-                        alt={item?.name || "Product"}
-                        fill
-                        className="object-contain rounded"
-                      />
-                    </div>
+                        {(() => {
+                          const imageSrc = item?.image_url
+                            ? item.image_url.startsWith("http")
+                              ? item.image_url
+                              : "/" + item.image_url.replace("public/", "")
+                            : item?.image
+                              ? "/" + item.image
+                              : "/placeholder.png";
+                          return (
+                            <Image
+                              src={imageSrc}
+                              alt={item?.name || "Product"}
+                              fill
+                              className="object-contain rounded"
+                            />
+                          );
+                        })()}
+                      </div>
+
 
                     <div className="flex-1 ml-3" style={{ fontFamily: "'Times New Roman', Times, serif" }}>
                       <span className="block text-sm font-semibold text-black">{item.name}</span>
